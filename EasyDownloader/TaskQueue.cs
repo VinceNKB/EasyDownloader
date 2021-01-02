@@ -10,10 +10,6 @@ namespace EasyDownloader
 
     internal class TaskQueue
     {
-        public static readonly int DEAFULT_MAX_LENGTH = 20;
-
-        public int MaxLength { get; }
-
         public int Length
         {
             get
@@ -22,24 +18,19 @@ namespace EasyDownloader
             }
         }
 
-        public BlockingCollection<SingleTask> Queue { get; private set; }
+        public BlockingCollection<TaskInfo> Queue { get; private set; }
 
-        public TaskQueue() : this(DEAFULT_MAX_LENGTH)
+        public TaskQueue()
         {
+            this.Queue = new BlockingCollection<TaskInfo>();
         }
 
-        public TaskQueue(int maxLength)
+        public void Add(TaskInfo taskInfo)
         {
-            this.MaxLength = maxLength > 0 ? maxLength : DEAFULT_MAX_LENGTH;
-            this.Queue = new BlockingCollection<SingleTask>(this.MaxLength);
+            this.Queue.Add(taskInfo);
         }
 
-        public void Add(SingleTask task)
-        {
-            this.Queue.Add(task);
-        }
-
-        public SingleTask Take()
+        public TaskInfo Take()
         {
             return this.Queue.Take();
         }

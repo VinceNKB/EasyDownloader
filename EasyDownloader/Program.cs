@@ -10,6 +10,22 @@ namespace EasyDownloader
     {
         static void Main(string[] args)
         {
+            Diagnostics.WriteDebugTrace("Start");
+            StartUp();
+
+            string input = string.Empty;
+
+            do
+            {
+                input = Console.ReadLine();
+            }
+            while (!input.Contains("exit"));
+        }
+
+        public static void StartUp()
+        {
+            // listen to Clipboard
+            ClipboardNotificationHandler cnh = new ClipboardNotificationHandler();
         }
     }
 }

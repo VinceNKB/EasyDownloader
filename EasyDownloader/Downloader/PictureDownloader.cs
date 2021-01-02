@@ -7,11 +7,22 @@ using System.Threading.Tasks;
 namespace EasyDownloader.Downloader
 {
     // Download all format of picture
-    class PictureDownloader : IDownloader
+    internal class PictureDownloader : DownloaderBase
     {
-        public void FromUrl(string url, string toPath)
+        public DownloaderType Type 
         {
-            throw new NotImplementedException();
+            get { return DownloaderType.Picture; }
+        }
+
+        public PictureDownloader(TaskInfo taskInfo) : base(taskInfo)
+        {
+        }
+
+        public override void Download()
+        {
+            Diagnostics.WriteDebugTrace($"Downloader. Downloading ${this.TaskInfo.Url}", Diagnostics.DebugLevel.Debug);
+            Diagnostics.WriteDebugTrace("NotImplementedException", Diagnostics.DebugLevel.Exception);
+            //throw new NotImplementedException();
         }
     }
 }
