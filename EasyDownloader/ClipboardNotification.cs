@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -9,13 +10,6 @@ namespace EasyDownloader
     /// </summary>
     public sealed class ClipboardNotification
     {
-        public const int WM_CLIPBOARDUPDATE = 0x031D;
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool AddClipboardFormatListener(IntPtr hWnd);
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool RemoveClipboardFormatListener(IntPtr hWnd);
-
         /// <summary>
         /// Occurs when the contents of the clipboard is updated.
         /// </summary>
@@ -24,7 +18,7 @@ namespace EasyDownloader
         public ClipboardNotification(Action action)
         {
             this.ClipboardUpdate = action;
-            new NotificationForm(OnClipboardUpdate);
+            Task.Run(() => Application.Run(new NotificationForm(OnClipboardUpdate)));
         }
 
         /// <summary>
@@ -51,19 +45,22 @@ namespace EasyDownloader
             {
                 this.onClipboardUpdate = onClipboardUpdate;
                 this.hWnd = this.Handle;
-                AddClipboardFormatListener(this.hWnd);
+                //Turn the child window into a message-only window (refer to Microsoft docs)
+                NativeMethods.SetParent(this.hWnd, NativeMethods.HWND_MESSAGE);
+                //Place window in the system-maintained clipboard format listener list
+                NativeMethods.AddClipboardFormatListener(this.hWnd);
                 Diagnostics.WriteDebugTrace($"Regist listener");
             }
 
             ~NotificationForm()
             {
-                RemoveClipboardFormatListener(this.hWnd);
+                NativeMethods.RemoveClipboardFormatListener(this.hWnd);
             }
 
             protected override void WndProc(ref Message m)
             {
-                Diagnostics.WriteDebugTrace(m.ToString());
-                if (m.Msg == WM_CLIPBOARDUPDATE && this.onClipboardUpdate != null)
+                //Diagnostics.WriteDebugTrace(m.ToString());
+                if (m.Msg == NativeMethods.WM_CLIPBOARDUPDATE && this.onClipboardUpdate != null)
                 {
                     if (Environment.TickCount - this.lastTickCount >= 200)
                     {
@@ -75,6 +72,23 @@ namespace EasyDownloader
                 }
                 base.WndProc(ref m);
             }
+        }
+
+        internal static class NativeMethods
+        {
+            //Reference https://docs.microsoft.com/en-us/windows/desktop/dataxchg/wm-clipboardupdate
+            public const int WM_CLIPBOARDUPDATE = 0x031D;
+            //Reference https://www.pinvoke.net/default.aspx/Constants.HWND
+            public static IntPtr HWND_MESSAGE = new IntPtr(-3);
+
+            [DllImport("user32.dll", SetLastError = true)]
+            public static extern bool AddClipboardFormatListener(IntPtr hWnd);
+            [DllImport("user32.dll", SetLastError = true)]
+            public static extern bool RemoveClipboardFormatListener(IntPtr hWnd);
+
+            //Reference https://www.pinvoke.net/default.aspx/user32.setparent
+            [DllImport("user32.dll", SetLastError = true)]
+            public static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
         }
     }
 }

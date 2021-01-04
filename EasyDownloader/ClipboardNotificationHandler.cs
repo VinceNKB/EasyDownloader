@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using System.Collections.Concurrent;
     using System.Windows.Forms;
+    using System.Threading;
 
     class ClipboardNotificationHandler
     {
@@ -24,13 +25,30 @@
             Task.Run(() => this.GenerateAndDistrbuteTasks());
         }
 
+        public static string GetTextFromClipboard()
+        {
+            string ReturnValue = string.Empty;
+            Thread STAThread = new Thread(
+                delegate ()
+                {
+                // Use a fully qualified name for Clipboard otherwise it
+                // will end up calling itself.
+                ReturnValue = System.Windows.Forms.Clipboard.GetText();
+                });
+            STAThread.SetApartmentState(ApartmentState.STA);
+            STAThread.Start();
+            STAThread.Join();
+
+            return ReturnValue;
+        }
+
         /// <summary>
         /// Add text from Clipboard to queue
         /// </summary>
         public static void AddClipboardContentToQueue()
         {
             Diagnostics.WriteDebugTrace("AddClipboardContentToQueue");
-            string text = Clipboard.GetText();
+            string text = GetTextFromClipboard();
             notificationQueue.Add(text);
         }
 

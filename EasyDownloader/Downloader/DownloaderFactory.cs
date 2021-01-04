@@ -9,18 +9,18 @@ namespace EasyDownloader.Downloader
     // Download all format of picture
     class DownloaderFactory
     {
-        public static DownloaderBase Create(DownloaderType type, TaskInfo taskInfo)
+        public static DownloaderBase Create(DownloaderType type)
         {
             switch (type)
             {
                 case DownloaderType.Default:
-                    return new PictureDownloader(taskInfo);
+                    return new PictureDownloader();
                 case DownloaderType.Picture:
-                    return new PictureDownloader(taskInfo);
+                    return new PictureDownloader();
                 case DownloaderType.Video:
-                    return new StreamDownloader(taskInfo);
+                    return new StreamDownloader();
                 default:
-                    return new PictureDownloader(taskInfo);
+                    return new PictureDownloader();
             }
         }
     }

@@ -64,5 +64,10 @@ namespace EasyDownloader
             string[] pieces = url.Split('.');
             return pieces != null && pieces.Length > 0 && videoSuffix.Contains(pieces[pieces.Length - 1]);
         }
+
+        public static String GetTimestamp()
+        {
+            return DateTime.Now.ToString("yyyyMMddHHmmssf");
+        }
     }
 }

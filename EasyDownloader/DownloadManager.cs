@@ -4,6 +4,7 @@
     using System.Threading.Tasks;
     using System.Collections.Concurrent;
     using EasyDownloader.Downloader;
+    using System.Threading;
 
     class DownloadManager
     {
@@ -42,17 +43,39 @@
                 this.DownloadThreadingPool.AddOrUpdate(id, currentTask, (k, v) => currentTask);
                 Diagnostics.WriteDebugTrace($"Start download task. Id={id}", Diagnostics.DebugLevel.Debug);
             }
+
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    int length = this.TaskQueue.Length;
+                    int downloadingCount = 0;
+                    foreach (DownloaderBase downloader in DownloaderDict.Values)
+                    {
+                        if (downloader.TaskInfo != null && downloader.TaskInfo.State != State.Completed)
+                        {
+                            downloadingCount ++;
+                        }
+                    }
+
+                    Diagnostics.WriteDebugTrace($"{Type}: {length} task in queue", Diagnostics.DebugLevel.Info);
+                    Diagnostics.WriteDebugTrace($"{Type}: {downloadingCount} task in downloading", Diagnostics.DebugLevel.Info);
+
+                    Thread.Sleep(5000);
+                }
+            });
         }
 
         public void MainTask(int taskId)
         {
+            DownloaderBase downloader = DownloaderFactory.Create(this.Type);
+
             while (true)
             {
                 TaskInfo taskInfo = this.TaskQueue.Take();
                 Diagnostics.WriteDebugTrace($"TaskId={taskId}. Get task from queue. Url={taskInfo.Url}", Diagnostics.DebugLevel.Debug);
-                DownloaderBase downloader = DownloaderFactory.Create(this.Type, taskInfo);
                 this.DownloaderDict.AddOrUpdate(taskId, downloader, (k, v) => downloader);
-                downloader.Download();
+                downloader.Download(taskInfo);
             }
         }
 

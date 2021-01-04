@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EasyDownloader
+﻿namespace EasyDownloader
 {
+    using System;
+    using System.IO;
+
     internal class TaskInfo
     {
         public Guid Id { get; set; }
@@ -14,13 +11,23 @@ namespace EasyDownloader
 
         public string FileName { get; set; }
 
-        public string FilePath { get; set; }
+        public string DirPath { get; set; }
+
+        public string FilePath 
+        { 
+            get
+            {
+                return Path.Combine(this.DirPath, this.FileName);
+            }
+        }
 
         public State State { get; set; }
 
         public long TotalSize { get; set; }
 
         public long DownloadedSize { get; set; }
+
+        public string Ext { get; set; }
 
         public double DownloadedPercent 
         { 
@@ -38,16 +45,32 @@ namespace EasyDownloader
 
             this.Id = Guid.NewGuid();
             this.Url = url;
+            this.FileName = this.GetFileName(url);
+            this.Ext = this.GetExt(this.FileName);
             this.State = State.NotStart;
         }
 
-        public TaskInfo(Guid id, string url, string fileName, string filePath, State state)
+        public TaskInfo(Guid id, string url, string fileName, string dirPath, State state)
         {
             this.Id = id;
             this.Url = url;
             this.FileName = fileName;
-            this.FilePath = filePath;
+            this.DirPath = dirPath;
             this.State = state;
+            this.Ext = this.GetExt(this.FileName);
+        }
+
+        public string GetFileName(string url)
+        {
+            Uri uri = new Uri(url);
+            string[] segments = uri.Segments;
+            return Util.GetTimestamp() + "_" + segments[segments.Length - 1];
+        }
+
+        public string GetExt(string fileName)
+        {
+            string[] texts = fileName.Split('.');
+            return texts[texts.Length - 1];
         }
     }
 
